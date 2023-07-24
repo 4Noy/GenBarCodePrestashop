@@ -1,0 +1,8 @@
+{
+    "server": "89.117.102.3", 
+    "port": "3306", 
+    "database": "u687809545_mi", 
+    "username": "u687809545_miuser", 
+    "password": "8f!SaIXj*5@eDSn1#@U0LeI^",
+    "driver": "MySQL ODBC 8.1 Unicode Driver"
+}
