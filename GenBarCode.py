@@ -24,7 +24,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import simpleSplit
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from PIL import Image
-import pyodbc, os, json
+import pyodbc, os, json, math
 
 # Verify if the ini.json file exists
 if not os.path.exists("ini.json"):
@@ -828,6 +828,10 @@ def chosePlaceToStart():
                     background-color: lightgrey;
                     cursor: pointer;
                 }
+                p {
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 14px;
+                }
             </style>
             <script>
                 function handleClick(index) {
@@ -850,6 +854,24 @@ def chosePlaceToStart():
     html += """
                 <input type="hidden" id="whereToStart" name="whereToStart" value="">
             </form>
+            </span>
+            """
+    # Now show the number of etiquettes and the number of pages
+    # number of etiquettes = number of products
+    # number of etiquettes = quantity of the product foreach product
+    with open(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json", "r") as f:
+        productsInfos = json.load(f)
+    quantity = sum([productInfos[3] for productInfos in productsInfos])
+
+    html += f"""
+    <div id="infos">
+            <p>Nombre d'étiquettes : {quantity}</p>
+            <p>Nombre de pages : {math.ceil(quantity/65)}</p>
+            <p>Nombre de produits : {len(productsInfos)}</p>
+            <p>Nombre de produits sur la dernière page : {quantity%65}</p>
+    </div>
+            """
+    html +="""
             <table id="myTable">
     """
     # create the table
