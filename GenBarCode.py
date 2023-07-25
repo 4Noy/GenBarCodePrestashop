@@ -126,10 +126,14 @@ def GetProductsInfos(idCartSupplier):
     for product in products:
         cursor.execute("SELECT name FROM mi_product_lang WHERE id_product = "+str(product[0]))
         name = cursor.fetchone()[0]
-        cursor.execute("SELECT ean13, supplier_reference, price, id_tax_rules_group FROM mi_product WHERE id_product = "+str(product[0]))
+        cursor.execute("SELECT ean13, price, id_tax_rules_group FROM mi_product WHERE id_product = "+str(product[0]))
         productInfos = cursor.fetchone()
+        # I have to get the supplier reference from the table mi_product_supplier with the id_product (name of property : product_supplier_reference)
+        cursor.execute("SELECT product_supplier_reference FROM mi_product_supplier WHERE id_product = "+str(product[0]))
+        refSupplier = cursor.fetchone()
+        refSupplier = str(refSupplier).replace("(", "").replace(")", "").replace("'", "").replace(",", "").replace(" ", "")
         # first i need to take the id_tax in mi_tax_rule with id_tax_rules_group
-        cursor.execute("SELECT id_tax FROM mi_tax_rule WHERE id_tax_rules_group = "+str(productInfos[3]))
+        cursor.execute("SELECT id_tax FROM mi_tax_rule WHERE id_tax_rules_group = "+str(productInfos[2]))
         id_tax = cursor.fetchone()[0]
         # then i need to take the rate in mi_tax with id_tax
         cursor.execute("SELECT rate FROM mi_tax WHERE id_tax = "+str(id_tax))
@@ -137,9 +141,8 @@ def GetProductsInfos(idCartSupplier):
         # calculate the price with the tax rate
         ean13 = productInfos[0]
         name = name.replace("\n", " ")
-        price = round(productInfos[2]*(1+taxRate/100), 2)
+        price = round(productInfos[1]*(1+taxRate/100), 2)
         quantity = product[1]
-        refSupplier = productInfos[1]
 
         # get the quantity in stock
         cursor.execute("SELECT quantity FROM mi_stock_available WHERE id_product = "+str(product[0]))
@@ -160,7 +163,7 @@ def GeneratePDF(productsInfos, whereToStart=0):
     pdf = canvas.Canvas("cart.pdf", pagesize=A4)
 
     # Position initiale du code-barre
-    border = 9.9 * mm
+    border = 11 * mm
     space_cell_y = 21.2 * mm
     space_cell_x = 38.1 * mm
     x = border
@@ -328,11 +331,12 @@ def GetProductInfos(ean13):
     taxRate = cursor.fetchone()[0]
     # calculate the price with the tax rate
     price = round(price*(1+taxRate/100), 2)
-    # then take the ref supplier from mi_product with the id_product
+    # then take the ref supplier from mi_product_supplier with the id_product
     # execute the query
-    cursor.execute("SELECT supplier_reference FROM mi_product WHERE id_product = "+str(id_product))
+    cursor.execute("SELECT product_supplier_reference FROM mi_product_supplier WHERE id_product = "+str(id_product))
     # get the result
     refSupplier = cursor.fetchone()[0]
+    refSupplier = str(refSupplier).replace("(", "").replace(")", "").replace("'", "").replace(",", "").replace(" ", "")
     # then take the quantity in stock from mi_stock_available with the id_product
     # execute the query
     cursor.execute("SELECT quantity FROM mi_stock_available WHERE id_product = "+str(id_product))
