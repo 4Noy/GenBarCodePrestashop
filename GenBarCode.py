@@ -434,8 +434,6 @@ def generatePDF():
     whereToStart = request.form['whereToStart']
     # Get all the products infos from the database
     productsInfos = json.load(open(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json", "r"))
-    # remove the file
-    os.remove(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json")
     # Launch the generation of the PDF
     LaunchGenerationProcess(productsInfos, whereToStart)
     # show the PDF
@@ -697,11 +695,9 @@ def addProduct():
     ean13 = request.form['ean13']
     if os.path.exists(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json"):
         # Get all the products infos from the database
-        print("a")
         productsInfos = json.load(open(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json", "r"))
     elif os.path.exists(original_path+"/data/productsInfos_Buffer.json"):
         # Get all the products infos from the database
-        print("b")
         idCartSupplier = "Buffer"
         productsInfos = json.load(open(original_path+"/data/productsInfos_Buffer.json", "r"))
     else:
@@ -943,6 +939,9 @@ def chosePlaceToStart():
     html += """            <input type="hidden" id="idCartSupplier" name="idCartSupplier" value=\"""" +str(idCartSupplier) +"""\"> """
     html += """
                 <input type="submit" value="Back">
+            </form>
+            <form action="/">
+                <input type="submit" value="Retour à la page principale">
             </form>
             <form id="myForm" action="/generatePDF" method="post">"""
     html += """            <input type="hidden" id="idCartSupplier" name="idCartSupplier" value=\"""" +str(idCartSupplier) +"""\"> """
