@@ -346,7 +346,7 @@ def GetProductInfos(ean13):
     conn.close()
     # the format of the result is : (ean, name, price, quantity, ref supplier, quantity in stock, quantity ordered=0)
     # return the result
-    return [(ean13, name, price, 0, refSupplier, quantityInStock, 0)]
+    return [(ean13, name, price, 1, refSupplier, quantityInStock, 0)]
     
 
 
