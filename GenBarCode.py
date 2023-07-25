@@ -365,10 +365,6 @@ def LaunchGenerationProcess(productsInfos, whereToStart=0):
 def index():
     if not os.path.exists("data"):
         os.mkdir("data")
-    else:
-        # remove all the files in the data folder
-        for filename in os.listdir("data"):
-            os.remove("data/"+filename)
     # Create a html page with a form to enter the id of the cart supplier
     # and a search bar to search a supplier by his reference
     suppliersInfos = GetSupplierInfos()
@@ -390,7 +386,7 @@ def index():
         html += "<option value='"+str(supplierInfos[0])+"'>"
     html += """
                 </datalist>
-                <input type="submit" value="Lancé">    
+                <input type="submit" value="Lancer">    
             </form>
     """
     
@@ -406,7 +402,18 @@ def index():
     
     html += """
                 </datalist>
-                <input type="submit" value="Lancé">
+                <input type="submit" value="Lancer">
+            </form>
+            <form action="/addProduct" method="post">
+                <input type="hidden" id="idCartSupplier" name="idCartSupplier" value=''>
+                <input type="text" id="ean13" name="ean13" placeholder="EAN13">
+                <input type="submit" value="Ajouter Produit">
+            </form>
+            <form action="/EditBuffer">
+                <input type="submit" value="Charger Codes Barres Enregistrés">
+            </form>
+            <form action="/DeleteSavedFiles">
+                <input type="submit" value="Supprimer les fichiers enregistrés">
             </form>
     """
 
@@ -427,6 +434,8 @@ def generatePDF():
     whereToStart = request.form['whereToStart']
     # Get all the products infos from the database
     productsInfos = json.load(open(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json", "r"))
+    # remove the file
+    os.remove(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json")
     # Launch the generation of the PDF
     LaunchGenerationProcess(productsInfos, whereToStart)
     # show the PDF
@@ -555,7 +564,7 @@ def EditInfos(idCartSupplier, isFirstTime, sort_column,sort_order=0):
                 <input type="submit" value="Ajouter une Commande">
             </form>
             <form action="/">
-                <input type="submit" value="Back">
+                <input type="submit" value="Enregistrer et Retour">
             </form>
         </span>
             <table id="myTable">
@@ -592,7 +601,7 @@ def EditInfos(idCartSupplier, isFirstTime, sort_column,sort_order=0):
                             <form class="quantity-form" action="/modifyQuantity" method="post">
                                 <input type="hidden" id="idCartSupplier" name="idCartSupplier" value='""" + str(idCartSupplier) + """'>
                                 <input type="hidden" id="ean13" name="ean13" value='""" + str(productInfos[0]) + """'>
-                                <input type="number" id="quantity" name="quantity" value=''>
+                                <input type="number" id="quantity" name="quantity" value='""" + str(productInfos[3]) + """'>
                             </form>
                         </div>
                     </td>
@@ -665,22 +674,55 @@ def sort():
     # redirect to EditInfos
     return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=column, sort_order=sortDirection))
 
+@app.route('/DeleteSavedFiles')
+def DeleteSavedFiles():
+    # delete all the files in the data folder
+    for filename in os.listdir(original_path+"/data"):
+        os.remove(original_path+"/data/"+filename)
+    # redirect to main page /
+    return redirect(url_for('index'))
+
+@app.route('/EditBuffer')
+def EditBuffer():
+    if os.path.exists(original_path+"/data/productsInfos_Buffer.json"):
+        # redirect to EditInfos
+        return redirect(url_for('EditInfos', idCartSupplier="Buffer", isFirstTime=0, sort_column=0, sort_order="asc"))
+    return redirect(url_for('index'))
+
 @app.route('/addProduct', methods=['POST'])
 def addProduct():
     # Get the id of the cart supplier from the form
     idCartSupplier = request.form['idCartSupplier']
     # Get the ean13 of the product from the form
     ean13 = request.form['ean13']
+    if os.path.exists(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json"):
+        # Get all the products infos from the database
+        print("a")
+        productsInfos = json.load(open(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json", "r"))
+    elif os.path.exists(original_path+"/data/productsInfos_Buffer.json"):
+        # Get all the products infos from the database
+        print("b")
+        idCartSupplier = "Buffer"
+        productsInfos = json.load(open(original_path+"/data/productsInfos_Buffer.json", "r"))
+    else:
+        idCartSupplier = "Buffer"
+        productsInfos = []
     # Get all the products infos from the database
-    productsInfos = json.load(open(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json", "r"))
     # add the product in the cart in json file
     # first, verify if the product is not already in the cart
-    for productInfos in productsInfos:
-        if productInfos[0] == ean13:
-            # the product is already in the cart
-            # redirect to EditInfos
-            return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=0, sort_order="asc"))
-    # the product is not in the cart
+    if idCartSupplier != "Buffer":
+        for productInfos in productsInfos:
+            if productInfos[0] == ean13:
+                # the product is already in the cart
+                # redirect to EditInfos
+                return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=0, sort_order="asc"))
+    else:
+        for productInfos in productsInfos:
+            if productInfos[0] == ean13:
+                productInfos[3] += 1
+                with open(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json", "w") as f:
+                    json.dump(productsInfos, f, default=str)
+                return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=0, sort_order="asc"))
     # get the infos of the product from the database
     productInfos = GetProductInfos(ean13)
     # if the product doesn't exists, redirect to EditInfos
@@ -691,6 +733,8 @@ def addProduct():
     # store the products infos in json file
     with open(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json", "w") as f:
         json.dump(productsInfos, f, default=str)
+    if idCartSupplier == "Buffer":
+        return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=0, sort_order="asc"))
     # redirect to EditInfos
     return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=0, sort_order="asc"))
 
@@ -747,6 +791,12 @@ def searchSupplier():
         if supplierInfos[1] == reference:
             idCartSupplier = supplierInfos[0]
             break
+    if idCartSupplier == "":
+        # redirect to main page /
+        return redirect(url_for('index'))
+    if os.path.exists(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json"):
+        # redirect to EditInfos
+        return redirect(url_for('savedCart', idCartSupplier=idCartSupplier))
     # redirect to EditInfos
     return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=1, sort_column=0, sort_order="asc"))
 
@@ -792,10 +842,53 @@ def mergeCarts():
     return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=0, sort_order="asc"))
     
 
+@app.route('/savedCart/<idCartSupplier>')
+def savedCart(idCartSupplier):
+    if os.path.exists(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json"):
+        html = """
+        <html>
+            <head>
+                <title>Cart</title>
+            </head>
+            <body>
+                <center>
+                    <h1>Generateur de Code Barre</h1>
+                    <form action="/UseSavedCart" method="post">
+                        <input type="hidden" id="idCartSupplier" name="idCartSupplier" value='"""+str(idCartSupplier)+"""'>
+                        <input type="submit" value="Utiliser le panier enregistré">
+                    </form>
+                    <form action="/UseNewCart" method="post">
+                        <input type="hidden" id="idCartSupplier" name="idCartSupplier" value='"""+str(idCartSupplier)+"""'>
+                        <input type="submit" value="Utiliser un nouveau panier">
+                    </form>
+                </center>
+            </body>
+        </html>
+        """
+        return html
+
+    return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=1, sort_column=0, sort_order="asc"))
+
+@app.route('/UseNewCart', methods=['POST'])
+def UseNewCart():
+    # Get the id of the cart supplier from the form
+    idCartSupplier = request.form['idCartSupplier']
+    # redirect to EditInfos
+    return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=1, sort_column=0, sort_order="asc"))
+
+@app.route('/UseSavedCart', methods=['POST'])
+def UseSavedCart():
+    # Get the id of the cart supplier from the form
+    idCartSupplier = request.form['idCartSupplier']
+    return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=0, sort_order="asc"))
+
 @app.route('/gotID', methods=['POST'])
 def gotID():
     # Get the id of the cart supplier from the form
     idCartSupplier = request.form['idCartSupplier']
+    if os.path.exists(original_path+"/data/productsInfos_"+str(idCartSupplier)+".json"):
+        # redirect to EditInfos
+        return redirect(url_for('savedCart', idCartSupplier=idCartSupplier))
     # redirect to EditInfos
     return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=1, sort_column=0, sort_order="asc"))
 
