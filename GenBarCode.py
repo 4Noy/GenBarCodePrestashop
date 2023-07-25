@@ -529,12 +529,12 @@ def EditInfos(idCartSupplier, isFirstTime, sort_column,sort_order=0):
         <span id="buttons">
             <form action="/chosePlaceToStart" method="post">
                 <input type="hidden" id="idCartSupplier" name="idCartSupplier" value='"""+str(idCartSupplier)+"""'>
-                <input type="submit" value="Generate PDF">
+                <input type="submit" value="Suivant">
             </form>
             <form action="/addProduct" method="post">
                 <input type="hidden" id="idCartSupplier" name="idCartSupplier" value='"""+str(idCartSupplier)+"""'>
                 <input type="text" id="ean13" name="ean13" placeholder="EAN13">
-                <input type="submit" value="Add Product">
+                <input type="submit" value="Ajouter Produit">
             </form>
             <form action="/mergeCarts" method="post">
                 <input type="hidden" id="idCartSupplier" name="idCartSupplier" value='"""+str(idCartSupplier)+"""'>"""
@@ -572,10 +572,10 @@ def EditInfos(idCartSupplier, isFirstTime, sort_column,sort_order=0):
                     <th><button onclick="sortTable(0)">Quantité commandée<span class="sort-icon"></span></button></th>
                     <th><button onclick="sortTable(1)">Quantité<span class="sort-icon"></span></button></th>
                     <th><button onclick="sortTable(2)">Stock<span class="sort-icon"></span></button></th>
-                    <th><button onclick="sortTable(3)">Name<span class="sort-icon"></span></button></th>
-                    <th><button onclick="sortTable(4)">Price<span class="sort-icon"></span></button></th>
+                    <th><button onclick="sortTable(3)">Nom<span class="sort-icon"></span></button></th>
+                    <th><button onclick="sortTable(4)">Prix<span class="sort-icon"></span></button></th>
                     <th><button onclick="sortTable(5)">EAN<span class="sort-icon"></span></button></th>
-                    <th><button onclick="sortTable(6)">Ref Supplier<span class="sort-icon"></span></button></th>
+                    <th><button onclick="sortTable(6)">Ref Fournisseur<span class="sort-icon"></span></button></th>
                     <th>Actions</th>
 
                 </tr>
@@ -616,7 +616,7 @@ def EditInfos(idCartSupplier, isFirstTime, sort_column,sort_order=0):
                         <form action="/removeProduct" method="post">
                             <input type="hidden" id="idCartSupplier" name="idCartSupplier" value='"""+str(idCartSupplier)+"""'>
                             <input type="hidden" id="ean13" name="ean13" value='"""+str(productInfos[0])+"""'>
-                            <input type="submit" value="Remove">
+                            <input type="submit" value="Supprimer">
                         </form>
                     </td>
                 </tr>
@@ -706,10 +706,12 @@ def addProduct():
         productsInfos = json.load(open(original_path+"/data/productsInfos_Buffer.json", "r"))
     else:
         idCartSupplier = "Buffer"
+        with open(original_path+"/data/productsInfos_Buffer.json", "w") as f:
+            json.dump([], f, default=str)
         productsInfos = []
-    # Get all the products infos from the database
-    # add the product in the cart in json file
-    # first, verify if the product is not already in the cart
+    if ean13 == "":
+        # redirect to EditInfos
+        return redirect(url_for('EditInfos', idCartSupplier=idCartSupplier, isFirstTime=0, sort_column=0, sort_order="asc"))
     if idCartSupplier != "Buffer":
         for productInfos in productsInfos:
             if productInfos[0] == ean13:
