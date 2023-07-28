@@ -1,3 +1,4 @@
+```
     _____     _____      __      _   ______      ____     ______       ____     ____     ______      _____  
    / ___ \   / ___/     /  \    / ) (_   _ \    (    )   (   __ \     / ___)   / __ \   (_  __ \    / ___/  
   / /   \_) ( (__      / /\ \  / /    ) (_) )   / /\ \    ) (__) )   / /      / /  \ \    ) ) \ \  ( (__    
@@ -5,8 +6,9 @@
  ( ( (__  ) ( (       ( ( ( ( ( (     /  _ \    )    (    ) \ \  _  ( (      ( ()  () )   ) )  ) ) ( (      
   \ \__/ /   \ \___   / /  \ \/ /    _) (_) )  /  /\  \  ( ( \ \_))  \ \___   \ \__/ /   / /__/ /   \ \___  
    \____/     \____\ (_/    \__/    (______/  /__(  )__\  )_) \__/    \____)   \____/   (______/     \____\ 
-
 By Noy.
+```
+
 
 This tool generate you Barcodes from a given supplier cart with Prestashop.
 
@@ -54,7 +56,7 @@ Make sure to provide accurate and secure login information to ensure proper data
 2. Run the Flask application by executing the following command:
 
 ```
-python cart_management_app.py
+python3 cart_management_app.py
 ```
 
 3. Once the application is running, access it by visiting `http://localhost:5001` in your web browser.
@@ -73,17 +75,13 @@ The Cart Management Application provides the following functionalities:
 
 - **Merging Carts**: Users can merge the current cart with another cart identified by the supplier's name or ID.
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
 ## Author
 
-This application was developed by [Noy](https://github.com/4Noy/).
+- [Noy](https://github.com/4Noy/).
 
 ## Version
 
-Current version: 0.1
+- 0.1
 
 ## Acknowledgments
 
